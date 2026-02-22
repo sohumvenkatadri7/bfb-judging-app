@@ -11,7 +11,7 @@ export interface Team {
   rank: number | null; // 1, 2, 3 or null
 }
 
-export type Role = "participant" | "shortlisting" | "final";
+export type Role = "participant" | "shortlisting" | "final" | "admin";
 
 export interface User {
   email: string;
@@ -122,10 +122,18 @@ export function generateCredentials(teams: Team[]): Credential[] {
   });
 
   creds.push({
-    email: "admin@bfb.com",
+    email: "finaljury@bfb.com",
     password: "final123",
     role: "final",
     label: "Final Jury",
+    teamId: null,
+  });
+
+  creds.push({
+    email: "admin@bfb.com",
+    password: "admin123",
+    role: "admin",
+    label: "Admin",
     teamId: null,
   });
 

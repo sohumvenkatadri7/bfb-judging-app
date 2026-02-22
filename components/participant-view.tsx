@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Confetti } from "@/components/confetti";
-import { ADMIN_ALERTS } from "@/lib/data";
+// import { ADMIN_ALERTS } from "@/lib/data";
 import type { Team, Theme } from "@/lib/data";
 
 const MILESTONES = [
@@ -93,6 +93,20 @@ export function ParticipantView({ team, onUpdateTeam }: ParticipantViewProps) {
   const timeLeft = useCountdown();
   const [showConfetti, setShowConfetti] = useState(false);
   const [expandedAlert, setExpandedAlert] = useState<number | null>(null);
+  const [adminAlerts, setAdminAlerts] = useState(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("bfb-alerts") : null;
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  useEffect(() => {
+    function handleStorage(e: StorageEvent) {
+      if (e.key === "bfb-alerts" && e.newValue) {
+        try { setAdminAlerts(JSON.parse(e.newValue)); } catch {}
+      }
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   const currentMilestone = team?.milestone ?? 0;
 
@@ -185,11 +199,11 @@ export function ParticipantView({ team, onUpdateTeam }: ParticipantViewProps) {
           </div>
           <div className="flex items-center gap-3 md:gap-6">
             <TimeUnit value={timeLeft.hours} label="Hours" />
-            <span className="mt-[-1.5rem] text-3xl font-bold text-slate-300">
+            <span className="-mt-6 text-3xl font-bold text-slate-300">
               :
             </span>
             <TimeUnit value={timeLeft.minutes} label="Minutes" />
-            <span className="mt-[-1.5rem] text-3xl font-bold text-slate-300">
+            <span className="-mt-6 text-3xl font-bold text-slate-300">
               :
             </span>
             <TimeUnit value={timeLeft.seconds} label="Seconds" />
@@ -221,7 +235,7 @@ export function ParticipantView({ team, onUpdateTeam }: ParticipantViewProps) {
           </h2>
         </div>
         <div className="flex flex-col gap-2">
-          {ADMIN_ALERTS.map((alert) => (
+          {adminAlerts.map((alert) => (
             <button
               key={alert.id}
               type="button"
