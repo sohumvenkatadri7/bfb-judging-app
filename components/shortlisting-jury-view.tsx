@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { GlobalHeader } from "./global-header";
 import {
   Filter,
   Star,
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import type { Team, Theme } from "@/lib/data";
+import type { Theme } from "@/lib/data";
 
 const THEMES: Theme[] = ["Mobility", "Sustainability", "Citizen Tech", "AI"];
 
@@ -33,8 +34,8 @@ const THEME_PILL_ACTIVE: Record<Theme, string> = {
 };
 
 interface ShortlistingJuryViewProps {
-  teams: Team[];
-  onUpdateTeam: (id: number, updates: Partial<Team>) => void;
+  teams: any[]; // raw DB rows (may be snake_case)
+  onUpdateTeam: (id: string, updates: Partial<Team>) => void;
 }
 
 export function ShortlistingJuryView({
@@ -44,10 +45,24 @@ export function ShortlistingJuryView({
   const [activeTheme, setActiveTheme] = useState<Theme | "All">("All");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "score">("score");
-  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+  const normalizedTeams = useMemo(() =>
+    teams.map((raw: any) => ({
+      id: String(raw.id),
+      name: raw.team_name ?? raw.name ?? "",
+      milestone: raw.milestone_status ?? raw.milestone ?? 0,
+      innovationScore: raw.innovation_score ?? raw.innovationScore ?? 0,
+      techScore: raw.tech_score ?? raw.techScore ?? 0,
+      isTop20: raw.is_top20 ?? raw.isTop20 ?? false,
+      rank: raw.rank ?? null,
+      theme: (raw.category ?? raw.theme) as Theme,
+    })),
+    [teams]
+  );
 
   const filteredTeams = useMemo(() => {
-    let filtered = teams;
+    let filtered = normalizedTeams;
     if (activeTheme !== "All") {
       filtered = filtered.filter((t) => t.theme === activeTheme);
     }
@@ -56,32 +71,33 @@ export function ShortlistingJuryView({
       filtered = filtered.filter(
         (t) =>
           t.name.toLowerCase().includes(q) ||
-          t.theme.toLowerCase().includes(q) ||
+          String(t.theme).toLowerCase().includes(q) ||
           String(t.id).includes(q)
       );
     }
     if (sortBy === "score") {
       filtered = [...filtered].sort(
-        (a, b) =>
-          b.innovationScore + b.techScore - (a.innovationScore + a.techScore)
+        (a, b) => b.innovationScore + b.techScore - (a.innovationScore + a.techScore)
       );
     } else {
       filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
     }
     return filtered;
-  }, [teams, activeTheme, search, sortBy]);
+  }, [normalizedTeams, activeTheme, search, sortBy]);
 
-  const top20Count = teams.filter((t) => t.isTop20).length;
+  const top20Count = normalizedTeams.filter((t) => t.isTop20).length;
   const selectedTeam = selectedTeamId
-    ? teams.find((t) => t.id === selectedTeamId) ?? null
+    ? normalizedTeams.find((t) => String(t.id) === String(selectedTeamId)) ?? null
     : null;
 
   const handleClosePanel = useCallback(() => setSelectedTeamId(null), []);
 
   return (
     <div className="flex flex-col gap-6 pb-20 md:pb-8">
+      <GlobalHeader title="Shortlisting Jury" />
+      <div className="mx-auto w-full max-w-6xl px-4">
       {/* Header Stats */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mt-3">
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Users className="size-4" />
@@ -90,7 +106,7 @@ export function ShortlistingJuryView({
             </span>
           </div>
           <p className="mt-1 font-mono text-2xl font-bold text-foreground">
-            {teams.length}
+            {normalizedTeams.length}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -123,16 +139,18 @@ export function ShortlistingJuryView({
             </span>
           </div>
           <p className="mt-1 font-mono text-2xl font-bold text-foreground">
-            {teams.length > 0
+            {normalizedTeams.length > 0
               ? (
-                  teams.reduce(
-                    (acc, t) => acc + t.innovationScore + t.techScore,
+                  normalizedTeams.reduce(
+                    (acc, t) => acc + (t.innovationScore || 0) + (t.techScore || 0),
                     0
-                  ) / teams.length
+                  ) / normalizedTeams.length
                 ).toFixed(1)
               : "0"}
           </p>
         </div>
+      </div>
+
       </div>
 
       {/* Filters */}
@@ -242,7 +260,7 @@ export function ShortlistingJuryView({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs text-muted-foreground">
-                        #{String(team.id).padStart(3, "0")}
+                        #{team.id.slice(0, 6)}
                       </span>
                       <span className="text-sm font-medium text-foreground">
                         {team.name}
@@ -318,7 +336,7 @@ export function ShortlistingJuryView({
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs text-muted-foreground">
-                  #{String(team.id).padStart(3, "0")}
+                  #{team.id.slice(0, 6)}
                 </span>
                 <h3 className="text-sm font-semibold text-foreground">
                   {team.name}
@@ -374,9 +392,9 @@ export function ShortlistingJuryView({
 /* ======= Team Scoring Panel ======= */
 
 interface TeamScoringPanelProps {
-  team: Team;
+  team: any;
   top20Count: number;
-  onUpdateTeam: (id: number, updates: Partial<Team>) => void;
+  onUpdateTeam: (id: string, updates: Partial<any>) => void;
   onClose: () => void;
 }
 

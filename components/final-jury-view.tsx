@@ -5,6 +5,7 @@ import { Trophy, Medal, Star, TrendingUp, Crown, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Team, Theme } from "@/lib/data";
+import { GlobalHeader } from "./global-header";
 
 const THEME_COLORS: Record<Theme, string> = {
   "Mobility": "bg-blue-50 text-blue-700 border-blue-200",
@@ -53,20 +54,28 @@ export function FinalJuryView({ teams, onUpdateTeam }: FinalJuryViewProps) {
 
   if (top20.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-20">
-        <div className="flex size-20 items-center justify-center rounded-full border border-border bg-secondary">
-          <Trophy className="size-10 text-muted-foreground" />
-        </div>
-        <h2 className="text-xl font-semibold text-foreground">No teams promoted yet</h2>
-        <p className="max-w-sm text-center text-sm text-muted-foreground">
-          Switch to the Shortlisting Jury view to evaluate and promote teams to the Top 20.
-        </p>
+      <div className="min-h-screen bg-surface">
+        <GlobalHeader title="Final Jury" />
+        <main className="mx-auto max-w-4xl px-4 py-20">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="flex size-20 items-center justify-center rounded-full border border-border bg-secondary">
+              <Trophy className="size-10 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground">No teams promoted yet</h2>
+            <p className="max-w-sm text-center text-sm text-muted-foreground">
+              Switch to the Shortlisting Jury view to evaluate and promote teams to the Top 20.
+            </p>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-20 md:pb-8">
+    <div className="min-h-screen bg-surface">
+      <GlobalHeader title="Final Jury" />
+      <main className="mx-auto max-w-6xl px-4 py-8">
+        <div className="flex flex-col gap-6 pb-20 md:pb-8">
       {/* Podium - Ranked Teams */}
       {rankedTeams.length > 0 && (
         <section>
@@ -270,6 +279,8 @@ export function FinalJuryView({ teams, onUpdateTeam }: FinalJuryViewProps) {
           ))}
         </div>
       </section>
+        </div>
+      </main>
     </div>
   );
 }

@@ -34,7 +34,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         return;
       }
       const data = await res.json();
-      onLogin(data);
+      onLogin(data.user); // Pass only the user object
     } catch (err) {
       setError("Network error");
     }
@@ -78,7 +78,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
         {/* Login Card */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
                 <AlertCircle className="size-4 shrink-0" />
